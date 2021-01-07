@@ -1,6 +1,37 @@
 apiVersion: apps/v1
 kind: Deployment
 metadata:
+  name: mysql
+  labels:
+    app: mysql
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      app: mysql
+  template:
+    metadata:
+      labels:
+        app: mysql
+    spec:
+      containers:
+        - name: mysql
+          image: mysql
+          ports:
+          - name: mysql-port
+            containerPort: 3306
+          env:
+          - name: MYSQL_DATABASE
+            value: "game"
+          - name: MYSQL_ROOT_PASSWORD
+            value: "root"
+              
+
+
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
   name: app
   labels:
     app: app
@@ -20,6 +51,11 @@ spec:
           ports:
           - name: app-port
             containerPort: 5000
+          env:
+          - name: DB_URI
+            value: "mysql+pymysql://root:pass@mysql:3306/game"
+          - name: SECRET_KEY
+            value: "hello"
   
 
 ---
@@ -35,4 +71,18 @@ spec:
       targetPort: 5000
   selector:
     app: app
+
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: mysql
+spec:
+  selector:
+    app: mysql
+  ports:
+  - protocol: TCP
+    port: 3306
+    targetPort: 3306
+  type: ClusterIP
         
